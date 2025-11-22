@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'tuning.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -11,36 +12,67 @@ class HomePage extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          // Full background image
           Positioned.fill(
             child: Image.asset(
               'assets/images/headstock.png',
               fit: BoxFit.cover,
             ),
           ),
-
-          // shadow over the picture
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(0.45), // Adjust opacity as needed
-            ),
+            child: Container(color: Colors.black.withOpacity(0.45)),
           ),
 
-          Center(
-            child: Text(
-              'Welcome!',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                shadows: [
-                  Shadow(
-                    blurRadius: 8,
-                    color: Colors.black54,
-                    offset: Offset(2, 2),
+          // Position of welcome text and button
+          Align(
+            alignment: Alignment(
+              0, //x
+              -0.4, //y
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Welcome Mr Rockstar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8,
+                        color: Colors.black54,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(height: 470), // Spacing between text and button
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF800020), // Bordo color
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Tuning()),
+                    );
+                  },
+                  child: Text(
+                    "Let's Tune!",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
