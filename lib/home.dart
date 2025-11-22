@@ -18,7 +18,14 @@ class HomePage extends StatelessWidget {
               fit: BoxFit.cover,
             ),
           ),
-          // Your content goes here, for example:
+
+          // shadow over the picture
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.45), // Adjust opacity as needed
+            ),
+          ),
+
           Center(
             child: Text(
               'Welcome!',
