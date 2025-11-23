@@ -8,9 +8,14 @@ class Tuning extends StatefulWidget {
   State<Tuning> createState() => _TunningState();
 }
 
+// stop button
+// fix picture
+// info button of which string is selected
+
 class _TunningState extends State<Tuning> {
   final AudioPlayer _player = AudioPlayer();
   String? selectedString;
+  bool isPlaying = false;
 
   void _playNote(String asset) async {
     await _player.stop();
@@ -32,14 +37,6 @@ class _TunningState extends State<Tuning> {
             ),
             SizedBox(height: 16),
             Text(_stringInfo(selectedString!), style: TextStyle(fontSize: 16)),
-            // SizedBox(height: 12),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: List.generate(
-            //     5,
-            //     (i) => Icon(Icons.favorite, color: Colors.red),
-            //   ),
-            // ),
             SizedBox(height: 12),
             Text(
               _stringQuote(selectedString!),
@@ -52,7 +49,7 @@ class _TunningState extends State<Tuning> {
     );
   }
 
-  // Info quotes for each string
+  // Info frenquency for each string
   String _stringInfo(String stringName) {
     switch (stringName) {
       case 'E':
@@ -72,6 +69,7 @@ class _TunningState extends State<Tuning> {
     }
   }
 
+  // Quote for each string
   String _stringQuote(String stringName) {
     switch (stringName) {
       case 'E':
@@ -122,11 +120,15 @@ class _TunningState extends State<Tuning> {
                 padding: EdgeInsets.all(0),
                 elevation: 6,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
-                  selectedString = 'E';
+                  selectedString = 'E'; // or the correct string
+                  isPlaying = true;
                 });
-                _playNote('sounds/LowE.wav'); // Play E string sound
+                await _player.stop(); // Stop any currently playing sound
+                await _player.play(
+                  AssetSource('sounds/LowE.mp3'),
+                ); // Play Low E sound
               },
               child: Container(
                 width: 60,
@@ -155,11 +157,13 @@ class _TunningState extends State<Tuning> {
                 padding: EdgeInsets.all(0),
                 elevation: 6,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
-                  selectedString = 'A';
+                  selectedString = 'A'; // or the correct string
+                  isPlaying = true;
                 });
-                _playNote('sounds/A.mp3');
+                await _player.stop(); // Stop any currently playing sound
+                await _player.play(AssetSource('sounds/A.mp3')); // Play A sound
               },
               child: Container(
                 width: 60,
@@ -188,11 +192,13 @@ class _TunningState extends State<Tuning> {
                 padding: EdgeInsets.all(0),
                 elevation: 6,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
-                  selectedString = 'D';
+                  selectedString = 'D'; // or the correct string
+                  isPlaying = true;
                 });
-                _playNote('sounds/D.mp3');
+                await _player.stop(); // Stop any currently playing sound
+                await _player.play(AssetSource('sounds/D.mp3')); // Play D sound
               },
               child: Container(
                 width: 60,
@@ -221,11 +227,13 @@ class _TunningState extends State<Tuning> {
                 padding: EdgeInsets.all(0),
                 elevation: 6,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
-                  selectedString = 'G';
+                  selectedString = 'G'; // or the correct string
+                  isPlaying = true;
                 });
-                _playNote('sounds/G.mp3');
+                await _player.stop(); // Stop any currently playing sound
+                await _player.play(AssetSource('sounds/G.mp3')); // Play G sound
               },
               child: Container(
                 width: 60,
@@ -254,11 +262,13 @@ class _TunningState extends State<Tuning> {
                 padding: EdgeInsets.all(0),
                 elevation: 6,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
-                  selectedString = 'B';
+                  selectedString = 'B'; // or the correct string
+                  isPlaying = true;
                 });
-                _playNote('sounds/B.mp3');
+                await _player.stop(); // Stop any currently playing sound
+                await _player.play(AssetSource('sounds/B.mp3')); // Play B sound
               },
               child: Container(
                 width: 60,
@@ -287,11 +297,15 @@ class _TunningState extends State<Tuning> {
                 padding: EdgeInsets.all(0),
                 elevation: 6,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
-                  selectedString = 'e';
+                  selectedString = 'e'; // or the correct string
+                  isPlaying = true;
                 });
-                _playNote('sounds/HighE.mp3');
+                await _player.stop(); // Stop any currently playing sound
+                await _player.play(
+                  AssetSource('sounds/HighE.mp3'),
+                ); // Play High E sound
               },
               child: Container(
                 width: 60,
@@ -317,6 +331,24 @@ class _TunningState extends State<Tuning> {
                 backgroundColor: Color(0xFF800020),
                 onPressed: () => _showStringInfo(context),
                 child: Icon(Icons.info, color: Colors.white),
+              ),
+            ),
+
+          // Stop button
+          if (isPlaying)
+            Positioned(
+              right: 24,
+              bottom: 24,
+              child: FloatingActionButton(
+                backgroundColor: Color(0xFF800020),
+                onPressed: () async {
+                  await _player.stop();
+                  setState(() {
+                    isPlaying = false;
+                  });
+                },
+                child: Icon(Icons.stop, color: Colors.white),
+                tooltip: 'Stop Sound',
               ),
             ),
         ],
