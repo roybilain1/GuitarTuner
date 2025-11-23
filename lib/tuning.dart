@@ -8,19 +8,12 @@ class Tuning extends StatefulWidget {
   State<Tuning> createState() => _TunningState();
 }
 
-// stop button
 // fix picture
-// info button of which string is selected
 
 class _TunningState extends State<Tuning> {
   final AudioPlayer _player = AudioPlayer();
   String? selectedString;
   bool isPlaying = false;
-
-  void _playNote(String asset) async {
-    await _player.stop();
-    await _player.play(AssetSource(asset));
-  }
 
   // The info section for each string
   void _showStringInfo(BuildContext context) {
@@ -322,7 +315,7 @@ class _TunningState extends State<Tuning> {
               ),
             ),
           ),
-
+          // Info button
           if (selectedString != null)
             Positioned(
               left: 24,
@@ -331,6 +324,31 @@ class _TunningState extends State<Tuning> {
                 backgroundColor: Color(0xFF800020),
                 onPressed: () => _showStringInfo(context),
                 child: Icon(Icons.info, color: Colors.white),
+              ),
+            ),
+
+          // Display currently playing string
+          if (selectedString != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 24, // Same as your buttons' bottom value
+              child: Center(
+                child: Text(
+                  'Playing: $selectedString',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8,
+                        color: Colors.black54,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
 
