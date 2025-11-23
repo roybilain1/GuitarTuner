@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class Tuning extends StatefulWidget {
   const Tuning({super.key});
@@ -8,6 +9,13 @@ class Tuning extends StatefulWidget {
 }
 
 class _TunningState extends State<Tuning> {
+  final AudioPlayer _player = AudioPlayer();
+
+  void _playNote(String asset) async {
+    await _player.stop();
+    await _player.play(AssetSource(asset));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +48,7 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                // TODO: Add action for E string
+                _playNote('sounds/LowE.wav'); // Play E string sound
               },
               child: Container(
                 width: 60,
@@ -70,7 +78,7 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                // TODO: Add action for E string
+                _playNote('sounds/A.mp3');
               },
               child: Container(
                 width: 60,
@@ -100,7 +108,7 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                // TODO: Add action for E string
+                _playNote('sounds/D.mp3');
               },
               child: Container(
                 width: 60,
@@ -130,7 +138,7 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                // TODO: Add action for E string
+                _playNote('sounds/G.mp3');
               },
               child: Container(
                 width: 60,
@@ -160,7 +168,7 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                // TODO: Add action for E string
+                _playNote('sounds/B.mp3');
               },
               child: Container(
                 width: 60,
@@ -190,7 +198,7 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                // TODO: Add action for E string
+                _playNote('sounds/E.mp3');
               },
               child: Container(
                 width: 60,
