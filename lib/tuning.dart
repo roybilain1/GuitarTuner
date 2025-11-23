@@ -10,10 +10,85 @@ class Tuning extends StatefulWidget {
 
 class _TunningState extends State<Tuning> {
   final AudioPlayer _player = AudioPlayer();
+  String? selectedString;
 
   void _playNote(String asset) async {
     await _player.stop();
     await _player.play(AssetSource(asset));
+  }
+
+  // The info section for each string
+  void _showStringInfo(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => Container(
+        padding: EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$selectedString String Info',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Text(_stringInfo(selectedString!), style: TextStyle(fontSize: 16)),
+            // SizedBox(height: 12),
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.center,
+            //   children: List.generate(
+            //     5,
+            //     (i) => Icon(Icons.favorite, color: Colors.red),
+            //   ),
+            // ),
+            SizedBox(height: 12),
+            Text(
+              _stringQuote(selectedString!),
+              style: TextStyle(fontStyle: FontStyle.italic, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Info quotes for each string
+  String _stringInfo(String stringName) {
+    switch (stringName) {
+      case 'E':
+        return 'Frequency: 82.41 Hz';
+      case 'A':
+        return 'Frequency: 110 Hz';
+      case 'D':
+        return 'Frequency: 146.83 Hz';
+      case 'G':
+        return 'Frequency: 196 Hz';
+      case 'B':
+        return 'Frequency: 246.94 Hz';
+      case 'e':
+        return 'Frequency: 329.63 Hz';
+      default:
+        return '';
+    }
+  }
+
+  String _stringQuote(String stringName) {
+    switch (stringName) {
+      case 'E':
+        return '"Tune up slowly – the thick string responds slower."';
+      case 'A':
+        return '"Recheck after tuning D & E strings."';
+      case 'D':
+        return '"Keep it steady."';
+      case 'G':
+        return '"Most unstable string, tune with care."';
+      case 'B':
+        return '"Hardest to intonate perfectly"';
+      case 'e':
+        return '"Breaks easily if turned too fast. Tune slowly."';
+      default:
+        return '';
+    }
   }
 
   @override
@@ -38,7 +113,7 @@ class _TunningState extends State<Tuning> {
 
           // Low E string button
           Positioned(
-            left: 40,
+            left: 30,
             top: 560,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -48,6 +123,9 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
+                setState(() {
+                  selectedString = 'E';
+                });
                 _playNote('sounds/LowE.wav'); // Play E string sound
               },
               child: Container(
@@ -68,7 +146,7 @@ class _TunningState extends State<Tuning> {
 
           // A string button
           Positioned(
-            left: 70,
+            left: 60,
             top: 460,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -78,6 +156,9 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
+                setState(() {
+                  selectedString = 'A';
+                });
                 _playNote('sounds/A.mp3');
               },
               child: Container(
@@ -98,8 +179,8 @@ class _TunningState extends State<Tuning> {
 
           // D string button
           Positioned(
-            left: 90,
-            top: 360,
+            left: 85,
+            top: 355,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
@@ -108,6 +189,9 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
+                setState(() {
+                  selectedString = 'D';
+                });
                 _playNote('sounds/D.mp3');
               },
               child: Container(
@@ -128,8 +212,8 @@ class _TunningState extends State<Tuning> {
 
           // G string button
           Positioned(
-            left: 110,
-            top: 260,
+            left: 105,
+            top: 255,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 shape: CircleBorder(),
@@ -138,6 +222,9 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
+                setState(() {
+                  selectedString = 'G';
+                });
                 _playNote('sounds/G.mp3');
               },
               child: Container(
@@ -158,7 +245,7 @@ class _TunningState extends State<Tuning> {
 
           // B string button
           Positioned(
-            left: 130,
+            left: 135,
             top: 160,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -168,6 +255,9 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
+                setState(() {
+                  selectedString = 'B';
+                });
                 _playNote('sounds/B.mp3');
               },
               child: Container(
@@ -188,7 +278,7 @@ class _TunningState extends State<Tuning> {
 
           // High E string button// Low E string button
           Positioned(
-            left: 150,
+            left: 160,
             top: 60,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -198,7 +288,10 @@ class _TunningState extends State<Tuning> {
                 elevation: 6,
               ),
               onPressed: () {
-                _playNote('sounds/E.mp3');
+                setState(() {
+                  selectedString = 'e';
+                });
+                _playNote('sounds/HighE.mp3');
               },
               child: Container(
                 width: 60,
@@ -215,6 +308,17 @@ class _TunningState extends State<Tuning> {
               ),
             ),
           ),
+
+          if (selectedString != null)
+            Positioned(
+              left: 24,
+              bottom: 24,
+              child: FloatingActionButton(
+                backgroundColor: Color(0xFF800020),
+                onPressed: () => _showStringInfo(context),
+                child: Icon(Icons.info, color: Colors.white),
+              ),
+            ),
         ],
       ),
     );

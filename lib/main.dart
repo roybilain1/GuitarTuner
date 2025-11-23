@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:guitartuner/home.dart';
 
+// flutter run lib/main.dart -d chrome
+
 void main() => runApp(GuitarTunerApp());
 
 class GuitarTunerApp extends StatelessWidget {

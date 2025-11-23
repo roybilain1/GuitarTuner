@@ -32,7 +32,7 @@ class HomePage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Welcome Mr Rockstar',
+                  'Welcome Mr Rockstar !',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
