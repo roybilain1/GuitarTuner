@@ -72,8 +72,17 @@ Bordo & white color theme for a personalized and professional feel.
 
 Sleek minimal UI — no clutter, simple navigation, clean feedback.
 
-🔧 Setup Instructions
 
 Clone the project
 
-git clone <repository-url>
+git clone https://github.com/roybilain1/GuitarTuner.git
+
+
+<img width="1290" height="2796" alt="simulator_screenshot_7DB2DD50-C20D-424A-B1CC-7B631B1A206F" src="https://github.com/user-attachments/assets/2031c69c-6e97-42e8-a3cc-b389fb76272c" />
+<img width="440" height="912" alt="Screenshot 2025-11-24 at 11 35 04 PM" src="https://github.com/user-attachments/assets/12f5417e-d8dd-46cb-9bfe-523af42fde24" />
+
+
+
+
+
+
