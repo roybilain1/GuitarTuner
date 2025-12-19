@@ -16,6 +16,8 @@ class _TuningState extends State<Tuning> {
   final double refHeight = 700;
 
   // Button positions as percentages of image size
+  // the entry.key is the string name
+  // the entry.value is the Offset(xPercent, yPercent)
   final Map<String, Offset> buttonPercents = {
     'E': Offset(70 / 500, 470 / 600),
     'A': Offset(95 / 500, 380 / 600),
@@ -158,6 +160,8 @@ class _TuningState extends State<Tuning> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             // Use the smallest of the available width/height to fit the image
+            // If the screen is smaller than the reference image → use the screen size
+            // If the screen is bigger than the reference image → use reference size (don’t scale up too much)
             double imageWidth = constraints.maxWidth < refWidth
                 ? constraints.maxWidth
                 : refWidth;

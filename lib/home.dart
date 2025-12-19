@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'tuning.dart';
+import 'songs.dart';
 
 class HomePage extends StatelessWidget {
   @override
@@ -46,7 +47,7 @@ class HomePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 470), // Spacing between text and button
+                SizedBox(height: 420), // Reduced spacing for two buttons
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(0xFF800020), // Bordo color
@@ -70,6 +71,41 @@ class HomePage extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.1,
                     ),
+                  ),
+                ),
+                SizedBox(height: 20), // Spacing between buttons
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Color(0xFF800020),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Color(0xFF800020), width: 2),
+                    ),
+                    elevation: 4,
+                  ),
+                  onPressed: () {
+                    // TODO: Navigate to songs page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SongsPage()),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.music_note, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        "Songs & Chords",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
