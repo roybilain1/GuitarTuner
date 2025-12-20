@@ -30,20 +30,29 @@ flutter:
 
   assets:
     - assets/images/headstock.png
+
     - assets/sounds/HighE.mp3
     - assets/sounds/B.mp3
     - assets/sounds/G.mp3
     - assets/sounds/D.mp3
     - assets/sounds/A.mp3
     - assets/sounds/LowE.mp3
+
     - assets/songs/
+
     - assets/chords/c.png
+    - assets/chords/cm.png
+    - assets/chords/c#m7.png
     - assets/chords/d.png
     - assets/chords/dm.png
     - assets/chords/e.png
     - assets/chords/em.png
+    - assets/chords/e7.png
     - assets/chords/f.png
+    - assets/chords/f#m.png
     - assets/chords/g.png
+    - assets/chords/g#m.png
     - assets/chords/a.png
     - assets/chords/am.png
     - assets/chords/b.png
+    - assets/chords/b7.png

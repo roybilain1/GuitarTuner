@@ -105,7 +105,7 @@ class _SongsPageState extends State<SongsPage> {
       id: 7,
       title: "Estesna'i",
       artist: "Adonis",
-      chords: ["E", "G#m", "A", "B", "A", "E", "C#min7", "B"],
+      chords: ["E", "G#m", "A", "B", "A", "E", "C#m7", "B"],
       audioPath: "songs/estesnai.mp3",
       isFavorite: false,
     ),
