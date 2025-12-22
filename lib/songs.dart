@@ -102,6 +102,138 @@ class _SongsPageState extends State<SongsPage> {
     super.dispose();
   }
 
+  // Helper function to get chord image path
+  String? _getChordImagePath(String chord) {
+    // Convert chord to lowercase for filename matching
+    final chordLower = chord.toLowerCase();
+
+    // Map of chord names to image filenames
+    final chordImageMap = {
+      'a': 'a.png',
+      'am': 'am.png',
+      'b': 'b.png',
+      'b7': 'b7.png',
+      'c': 'c.png',
+      'cm': 'cm.png',
+      'c#m7': 'c#m7.png',
+      'd': 'd.png',
+      'dm': 'dm.png',
+      'e': 'e.png',
+      'e7': 'e7.png',
+      'em': 'em.png',
+      'em7': 'em7.png',
+      'f': 'f.png',
+      'f#m': 'f#m.png',
+      'g': 'g.png',
+      'g#m': 'g#m.png',
+    };
+
+    final imageName = chordImageMap[chordLower];
+    return imageName != null ? 'assets/chords/$imageName' : null;
+  }
+
+  // Show chord diagram in a popup
+  void _showChordDiagram(String chord) {
+    final imagePath = _getChordImagePath(chord);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  chord,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF800020),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Container(
+                  width: 200,
+                  height: 250,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!, width: 2),
+                  ),
+                  child: imagePath != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(
+                            imagePath,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.music_note,
+                                      size: 48,
+                                      color: Colors.grey[400],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Chord diagram\nnot available',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        )
+                      : Container(
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.music_note,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Chord diagram\nnot available',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('Close'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF800020),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _toggleFavorite(int songId) {
     setState(() {
       final song = songs.firstWhere((s) => s.id == songId);
@@ -342,18 +474,35 @@ class _SongsPageState extends State<SongsPage> {
                   spacing: 8,
                   runSpacing: 4,
                   children: song.chords.map((chord) {
-                    return Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Color(0xFF800020),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        chord,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                    return GestureDetector(
+                      onTap: () => _showChordDiagram(chord),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF800020),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              chord,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Icon(
+                              Icons.touch_app,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                          ],
                         ),
                       ),
                     );
