@@ -17,6 +17,7 @@ dependencies:
   google_fonts: ^6.1.0
   audioplayers: ^5.2.1
   wave: ^0.2.0
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -38,7 +39,16 @@ flutter:
     - assets/sounds/A.mp3
     - assets/sounds/LowE.mp3
 
-    - assets/songs/
+    - assets/songs/Amara_Ya_Amara.mp3
+    - assets/songs/creep.mp3
+    - assets/songs/Estesna'i.mp3
+    - assets/songs/Hotel_California.mp3
+    - assets/songs/Law_Baddak_Yani.mp3
+    - assets/songs/Nothing_Else_Matters.mp3
+    - assets/songs/Shayef.mp3
+    - assets/songs/Stairway_To_Heaven.mp3
+    - assets/songs/Sweet_Child_O'_Mine.mp3
+    - assets/songs/Wish_You_Were_Here.mp3
 
     - assets/chords/c.png
     - assets/chords/cm.png
@@ -56,3 +66,20 @@ flutter:
     - assets/chords/am.png
     - assets/chords/b.png
     - assets/chords/b7.png
+
+
+# flutter run lib/main.dart -d chrome
+
+
+
+# if we want to update anything in our entry in our backend, we can use the following curl command by replacing the id and the fields to be updated:
+
+# curl -X PUT http://localhost:5001/songs/6 \
+#   -H "Content-Type: application/json" \
+#   -d '{
+#     "title": "Stairway to Heaven",
+#     "artist": "Led Zeppelin", 
+#     "chords": ["Am","C","D","F","G","Am","C","D","F","Am"],
+#     "audioPath": "songs/Stairway_To_Heaven.mp3",
+#     "isFavorite": false
+#   }'

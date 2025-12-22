@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SongsPage extends StatefulWidget {
   const SongsPage({super.key});
@@ -17,10 +18,60 @@ class _SongsPageState extends State<SongsPage> {
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
 
+  // Backend API
+  final String apiUrl = "http://localhost:5001/songs";
+  List<Song> songs = [];
+  bool isLoading = true;
+  String? errorMessage;
+
   @override
   void initState() {
     super.initState();
     _initializeAudioPlayer();
+    fetchSongs(); // Fetch songs from backend
+  }
+
+  // Fetch songs from backend API
+  Future<void> fetchSongs() async {
+    try {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      print("Fetching songs from: $apiUrl");
+      final response = await http.get(Uri.parse(apiUrl));
+
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true) {
+          final List<dynamic> songsData = data['data'];
+
+          setState(() {
+            songs = songsData
+                .map((songJson) => Song.fromJson(songJson))
+                .toList();
+            isLoading = false;
+          });
+
+          print("Loaded ${songs.length} songs successfully");
+        } else {
+          throw Exception('API returned success: false');
+        }
+      } else {
+        throw Exception('Failed to load songs: ${response.statusCode}');
+      }
+    } catch (e) {
+      print("Error fetching songs: $e");
+      setState(() {
+        errorMessage = "Error loading songs: $e";
+        isLoading = false;
+      });
+    }
   }
 
   void _initializeAudioPlayer() {
@@ -51,90 +102,6 @@ class _SongsPageState extends State<SongsPage> {
     super.dispose();
   }
 
-  // Sample songs data - this will later come from your backend/database
-  List<Song> songs = [
-    Song(
-      id: 1,
-      title: "Amara",
-      artist: "Fayrouz",
-      chords: ["C", "F", "G"],
-      audioPath: "songs/amara.mp3", // Add your audio file here
-      isFavorite: false,
-    ),
-    Song(
-      id: 2,
-      title: "Hotel California",
-      artist: "Eagles",
-      chords: ["Am", "E7", "G", "D", "F", "C", "Dm", "E7"],
-      audioPath: "songs/hotel_california.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 3,
-      title: "Wish You Were Here",
-      artist: "Pink Floyd",
-      chords: ["C", "D", "Am", "G", "D", "C", "Am", "G"],
-      audioPath: "songs/wish_you_were_here.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 4,
-      title: "Sweet Child O' Mine",
-      artist: "Guns N' Roses",
-      chords: ["D", "C", "G", "D", "C", "G", "D", "C", "G", "F", "G"],
-      audioPath: "songs/sweet_child_o_mine.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 5,
-      title: "Shayef",
-      artist: "Adonis",
-      chords: ["A", "B", "E", "G#m", "F#m"],
-      audioPath: "songs/shayef.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 6,
-      title: "Stairway to Heaven",
-      artist: "Led Zeppelin",
-      chords: ["Am", "C", "D", "F", "G", "Am", "C", "D", "F", "Am"],
-      audioPath: "songs/stairway_to_heaven.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 7,
-      title: "Estesna'i",
-      artist: "Adonis",
-      chords: ["E", "G#m", "A", "B", "A", "E", "C#m7", "B"],
-      audioPath: "songs/estesnai.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 8,
-      title: "Nothing Else Matters",
-      artist: "Metallica",
-      chords: ["Em", "Am", "C", "D", "Em", "Am", "C", "D", "G", "B7"],
-      audioPath: "songs/nothing_else_matters.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 9,
-      title: "Creep",
-      artist: "Radiohead",
-      chords: ["G", "B", "C", "Cm", "G", "B", "C", "Cm"],
-      audioPath: "songs/creep.mp3",
-      isFavorite: false,
-    ),
-    Song(
-      id: 10,
-      title: "Law Baddak Yani",
-      artist: "Adonis",
-      chords: ["C", "Em", "Am", "G", "Em", "F", "Dm", "G", "F", "C", "G"],
-      audioPath: "songs/law_baddak_yani.mp3",
-      isFavorite: false,
-    ),
-  ];
-
   void _toggleFavorite(int songId) {
     setState(() {
       final song = songs.firstWhere((s) => s.id == songId);
@@ -149,184 +116,44 @@ class _SongsPageState extends State<SongsPage> {
       setState(() {
         _isPlaying = false;
       });
-    } else if (_playingSongId == song.id && !_isPlaying) {
-      // Resume current song
-      await _audioPlayer.resume();
-      setState(() {
-        _isPlaying = true;
-      });
     } else {
-      // Play new song
-      if (song.audioPath != null) {
+      // Play new song or resume
+      if (_playingSongId != song.id) {
+        // Stop current song and play new one
         await _audioPlayer.stop();
-        await _audioPlayer.play(AssetSource(song.audioPath!));
         setState(() {
           _playingSongId = song.id;
+          _currentPosition = Duration.zero;
+        });
+
+        if (song.audioPath != null) {
+          try {
+            await _audioPlayer.play(AssetSource(song.audioPath!));
+            setState(() {
+              _isPlaying = true;
+            });
+          } catch (e) {
+            print('Error playing audio: $e');
+            // Show error to user
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not play audio: ${song.title}')),
+            );
+          }
+        }
+      } else {
+        // Resume current song
+        await _audioPlayer.resume();
+        setState(() {
           _isPlaying = true;
         });
       }
     }
   }
 
-  Future<void> _stopSong() async {
-    await _audioPlayer.stop();
-    setState(() {
-      _playingSongId = null;
-      _isPlaying = false;
-      _currentPosition = Duration.zero;
-    });
-  }
-
   String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    String minutes = duration.inMinutes.toString().padLeft(2, '0');
+    String seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
-  }
-
-  void _showChordDiagram(BuildContext context, String chord) {
-    // Clean chord name for file lookup (remove special characters)
-    String cleanChordName = chord.replaceAll(RegExp(r'[^A-Za-z0-9#b]'), '');
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '$chord Chord',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF800020),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: Colors.grey),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                Container(
-                  width: 200,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _buildChordDiagram(cleanChordName),
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Tap and hold to practice this chord',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildChordDiagram(String chordName) {
-    // Try to load the chord diagram image
-    String imagePath = 'assets/chords/${chordName.toLowerCase()}.png';
-
-    return FutureBuilder(
-      future: _checkAssetExists(imagePath),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-
-        bool assetExists = snapshot.data == true;
-
-        if (assetExists) {
-          return Image.asset(
-            imagePath,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildPlaceholderDiagram(chordName);
-            },
-          );
-        } else {
-          return _buildPlaceholderDiagram(chordName);
-        }
-      },
-    );
-  }
-
-  Future<bool> _checkAssetExists(String path) async {
-    try {
-      await rootBundle.load(path);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Widget _buildPlaceholderDiagram(String chordName) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.grey[50]!, Colors.grey[100]!],
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.music_note, size: 48, color: Color(0xFF800020)),
-          SizedBox(height: 16),
-          Text(
-            chordName,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF800020),
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            'Chord Diagram',
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-          ),
-          SizedBox(height: 16),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.orange[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              'Diagram coming soon!',
-              style: TextStyle(fontSize: 12, color: Colors.orange[700]),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -338,209 +165,259 @@ class _SongsPageState extends State<SongsPage> {
         backgroundColor: Color(0xFF800020),
         elevation: 4,
         toolbarHeight: 90,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: fetchSongs,
+            tooltip: 'Refresh Songs',
+          ),
+        ],
       ),
       backgroundColor: Colors.grey[50],
-      body: ListView.builder(
-        padding: EdgeInsets.all(16),
-        itemCount: songs.length,
-        itemBuilder: (context, index) {
-          final song = songs[index];
-          return Card(
-            margin: EdgeInsets.only(bottom: 16),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: Color(0xFF800020)),
+            SizedBox(height: 16),
+            Text(
+              'Loading songs...',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              song.title,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF800020),
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              song.artist,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          song.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: song.isFavorite ? Colors.red : Colors.grey,
-                          size: 28,
-                        ),
-                        onPressed: () => _toggleFavorite(song.id),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'Chords:',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[700],
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: song.chords.map((chord) {
-                      return GestureDetector(
-                        onTap: () => _showChordDiagram(context, chord),
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 150),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(0xFF800020),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 2,
-                                offset: Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                chord,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.touch_app,
-                                color: Colors.white70,
-                                size: 12,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  // Audio Controls Section
-                  if (song.audioPath != null) ...[
-                    SizedBox(height: 16),
-                    Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
+          ],
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red),
+            SizedBox(height: 16),
+            Text(
+              'Error Loading Songs',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+            SizedBox(height: 8),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                errorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: fetchSongs,
+              child: Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF800020),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (songs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.music_note_outlined, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No Songs Found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Check your backend connection',
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(16),
+      itemCount: songs.length,
+      itemBuilder: (context, index) {
+        final song = songs[index];
+        return Card(
+          margin: EdgeInsets.only(bottom: 16),
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                song.title,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      (_playingSongId == song.id && _isPlaying)
-                                          ? Icons.pause
-                                          : Icons.play_arrow,
-                                      color: Color(0xFF800020),
-                                    ),
-                                    onPressed: () => _playPauseSong(song),
-                                  ),
-                                  if (_playingSongId == song.id)
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.stop,
-                                        color: Color(0xFF800020),
-                                      ),
-                                      onPressed: _stopSong,
-                                    ),
-                                ],
-                              ),
-                            ],
+                          Text(
+                            song.title,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF800020),
+                            ),
                           ),
-                          if (_playingSongId == song.id) ...[
-                            SizedBox(height: 8),
-                            LinearProgressIndicator(
-                              value: _totalDuration.inMilliseconds > 0
-                                  ? _currentPosition.inMilliseconds /
-                                        _totalDuration.inMilliseconds
-                                  : 0.0,
-                              backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(0xFF800020),
-                              ),
+                          SizedBox(height: 4),
+                          Text(
+                            song.artist,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontStyle: FontStyle.italic,
                             ),
-                            SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _formatDuration(_currentPosition),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                Text(
-                                  _formatDuration(_totalDuration),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => _toggleFavorite(song.id),
+                          icon: Icon(
+                            song.isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: song.isFavorite ? Colors.red : Colors.grey,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _playPauseSong(song),
+                          icon: Icon(
+                            (_playingSongId == song.id && _isPlaying)
+                                ? Icons.pause_circle_filled
+                                : Icons.play_circle_fill,
+                            color: Color(0xFF800020),
+                            size: 32,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
+                ),
+
+                // Chords section
+                SizedBox(height: 12),
+                Text(
+                  'Chords:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: song.chords.map((chord) {
+                    return Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Color(0xFF800020),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        chord,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                // Audio progress bar (show only if this song is playing)
+                if (_playingSongId == song.id) ...[
+                  SizedBox(height: 12),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      children: [
+                        SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            thumbShape: RoundSliderThumbShape(
+                              enabledThumbRadius: 8,
+                            ),
+                            trackHeight: 4,
+                          ),
+                          child: Slider(
+                            value: _currentPosition.inSeconds.toDouble(),
+                            max: _totalDuration.inSeconds.toDouble(),
+                            onChanged: (value) {
+                              _audioPlayer.seek(
+                                Duration(seconds: value.toInt()),
+                              );
+                            },
+                            activeColor: Color(0xFF800020),
+                            inactiveColor: Colors.grey[300],
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _formatDuration(_currentPosition),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            Text(
+                              _formatDuration(_totalDuration),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
-              ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -561,4 +438,16 @@ class Song {
     this.audioPath,
     this.isFavorite = false,
   });
+
+  // Factory constructor to create Song from JSON (backend API response)
+  factory Song.fromJson(Map<String, dynamic> json) {
+    return Song(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      artist: json['artist'] as String,
+      chords: List<String>.from(json['chords'] as List),
+      audioPath: json['audio_path'] as String?,
+      isFavorite: (json['is_favorite'] as int) == 1,
+    );
+  }
 }
