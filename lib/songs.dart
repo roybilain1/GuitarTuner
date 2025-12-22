@@ -3,6 +3,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'favorites.dart';
 
 class SongsPage extends StatefulWidget {
   const SongsPage({super.key});
@@ -20,7 +21,9 @@ class _SongsPageState extends State<SongsPage> {
 
   // Backend API
   final String apiUrl = "http://localhost:5001/songs";
+  final String chordsApiUrl = "http://localhost:5001/chords";
   List<Song> songs = [];
+  Map<String, Chord> chordMap = {}; // Store chord data from database
   bool isLoading = true;
   String? errorMessage;
 
@@ -28,7 +31,40 @@ class _SongsPageState extends State<SongsPage> {
   void initState() {
     super.initState();
     _initializeAudioPlayer();
-    fetchSongs(); // Fetch songs from backend
+    fetchChords(); // Fetch chords first
+    fetchSongs(); // Then fetch songs
+  }
+
+  // Fetch chords from backend API
+  Future<void> fetchChords() async {
+    try {
+      print("Fetching chords from: $chordsApiUrl");
+      final response = await http.get(Uri.parse(chordsApiUrl));
+
+      print("Chords response status: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] is List) {
+          final List<dynamic> chordsData = data['data'];
+
+          // Convert to map for easy lookup
+          chordMap.clear();
+          for (var chordJson in chordsData) {
+            final chord = Chord.fromJson(chordJson);
+            chordMap[chord.name] = chord;
+          }
+
+          print("Loaded ${chordMap.length} chords from database");
+        } else {
+          print("Invalid chords response format");
+        }
+      } else {
+        print("Failed to fetch chords: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching chords: $e");
+    }
   }
 
   // Fetch songs from backend API
@@ -100,41 +136,17 @@ class _SongsPageState extends State<SongsPage> {
   void dispose() {
     _audioPlayer.dispose();
     super.dispose();
-  }
+  } // Helper function to get chord image path from database
 
-  // Helper function to get chord image path
   String? _getChordImagePath(String chord) {
-    // Convert chord to lowercase for filename matching
-    final chordLower = chord.toLowerCase();
-
-    // Map of chord names to image filenames
-    final chordImageMap = {
-      'a': 'a.png',
-      'am': 'am.png',
-      'b': 'b.png',
-      'b7': 'b7.png',
-      'c': 'c.png',
-      'cm': 'cm.png',
-      'c#m7': 'c#m7.png',
-      'd': 'd.png',
-      'dm': 'dm.png',
-      'e': 'e.png',
-      'e7': 'e7.png',
-      'em': 'em.png',
-      'em7': 'em7.png',
-      'f': 'f.png',
-      'f#m': 'f#m.png',
-      'g': 'g.png',
-      'g#m': 'g#m.png',
-    };
-
-    final imageName = chordImageMap[chordLower];
-    return imageName != null ? 'assets/chords/$imageName' : null;
+    final chordData = chordMap[chord];
+    return chordData?.imagePath;
   }
 
   // Show chord diagram in a popup
   void _showChordDiagram(String chord) {
-    final imagePath = _getChordImagePath(chord);
+    final chordData = chordMap[chord];
+    final imagePath = chordData?.imagePath ?? _getChordImagePath(chord);
 
     showDialog(
       context: context,
@@ -153,6 +165,32 @@ class _SongsPageState extends State<SongsPage> {
                     color: Color(0xFF800020),
                   ),
                 ),
+                if (chordData?.description != null) ...[
+                  SizedBox(height: 8),
+                  Text(
+                    chordData!.description!,
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+                if (chordData != null &&
+                    chordData.difficultyLevel.isNotEmpty) ...[
+                  SizedBox(height: 4),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _getDifficultyColor(chordData.difficultyLevel),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      chordData.difficultyLevel,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
                 SizedBox(height: 16),
                 Container(
                   width: 200,
@@ -234,11 +272,43 @@ class _SongsPageState extends State<SongsPage> {
     );
   }
 
-  void _toggleFavorite(int songId) {
-    setState(() {
-      final song = songs.firstWhere((s) => s.id == songId);
-      song.isFavorite = !song.isFavorite;
-    });
+  void _toggleFavorite(int songId) async {
+    try {
+      final response = await http.patch(
+        Uri.parse("$apiUrl/$songId/favorite"),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          // Update the local song state
+          setState(() {
+            final song = songs.firstWhere((s) => s.id == songId);
+            song.isFavorite = data['data']['is_favorite'] == 1;
+          });
+
+          // Show feedback to user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                data['data']['is_favorite'] == 1
+                    ? 'Added to favorites'
+                    : 'Removed from favorites',
+              ),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
+      } else {
+        throw Exception('Failed to toggle favorite');
+      }
+    } catch (e) {
+      print('Error toggling favorite: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating favorite status')));
+    }
   }
 
   Future<void> _playPauseSong(Song song) async {
@@ -288,6 +358,20 @@ class _SongsPageState extends State<SongsPage> {
     return '$minutes:$seconds';
   }
 
+  // Helper function to get difficulty color
+  Color _getDifficultyColor(String difficulty) {
+    switch (difficulty.toLowerCase()) {
+      case 'beginner':
+        return Colors.green;
+      case 'intermediate':
+        return Colors.orange;
+      case 'advanced':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -298,6 +382,16 @@ class _SongsPageState extends State<SongsPage> {
         elevation: 4,
         toolbarHeight: 90,
         actions: [
+          IconButton(
+            icon: Icon(Icons.favorite),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FavoritesPage()),
+              );
+            },
+            tooltip: 'View Favorites',
+          ),
           IconButton(
             icon: Icon(Icons.refresh),
             onPressed: fetchSongs,
@@ -597,6 +691,33 @@ class Song {
       chords: List<String>.from(json['chords'] as List),
       audioPath: json['audio_path'] as String?,
       isFavorite: (json['is_favorite'] as int) == 1,
+    );
+  }
+}
+
+class Chord {
+  final int id;
+  final String name;
+  final String imagePath;
+  final String? description;
+  final String difficultyLevel;
+
+  Chord({
+    required this.id,
+    required this.name,
+    required this.imagePath,
+    this.description,
+    required this.difficultyLevel,
+  });
+
+  // Factory constructor to create Chord from JSON (backend API response)
+  factory Chord.fromJson(Map<String, dynamic> json) {
+    return Chord(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      imagePath: json['image_path'] as String,
+      description: json['description'] as String?,
+      difficultyLevel: json['difficulty_level'] as String,
     );
   }
 }

@@ -70,6 +70,7 @@ flutter:
 
 # flutter run lib/main.dart -d chrome
 
+# cd /Users/apple/LIU/Mobile/project1/backend && node server.js & cd /Users/apple/LIU/Mobile/project1/guitartuner && flutter run -d chrome
 
 
 # if we want to update anything in our entry in our backend, we can use the following curl command by replacing the id and the fields to be updated:
@@ -83,3 +84,8 @@ flutter:
 #     "audioPath": "songs/Stairway_To_Heaven.mp3",
 #     "isFavorite": false
 #   }'
+
+
+# test backend apis
+
+# curl -s -X GET "http://localhost:5001/songs" | jq '.count'
