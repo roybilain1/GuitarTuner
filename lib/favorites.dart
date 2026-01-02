@@ -17,9 +17,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
 
-  // Backend API
-  final String apiUrl = "http://localhost:5001/songs";
-  final String chordsApiUrl = "http://localhost:5001/chords";
+  // Backend API - Railway Production
+  final String apiUrl = "https://guitartuner-production.up.railway.app/songs";
+  final String chordsApiUrl =
+      "https://guitartuner-production.up.railway.app/chords";
   List<Song> favoriteSongs = [];
   Map<String, Chord> chordMap = {};
   bool isLoading = true;

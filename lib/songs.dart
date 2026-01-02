@@ -19,9 +19,10 @@ class _SongsPageState extends State<SongsPage> {
   Duration _currentPosition = Duration.zero;
   Duration _totalDuration = Duration.zero;
 
-  // Backend API
-  final String apiUrl = "http://localhost:5001/songs";
-  final String chordsApiUrl = "http://localhost:5001/chords";
+  // Backend API - Railway Production
+  final String apiUrl = "https://guitartuner-production.up.railway.app/songs";
+  final String chordsApiUrl =
+      "https://guitartuner-production.up.railway.app/chords";
   List<Song> songs = [];
   Map<String, Chord> chordMap = {}; // Store chord data from database
   bool isLoading = true;
