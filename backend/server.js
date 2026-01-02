@@ -12,19 +12,31 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Database connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASSWORD || "",
-  database: process.env.DB_NAME || "guitartuner",
-});
+// Railway provides MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE
+// Also support custom variable names for flexibility
+const dbConfig = {
+  host: process.env.MYSQLHOST || process.env.DB_HOST || "localhost",
+  user: process.env.MYSQLUSER || process.env.DB_USER || "root",
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME || "guitartuner",
+  port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
+};
+
+console.log("Attempting to connect to MySQL:");
+console.log(`  Host: ${dbConfig.host}`);
+console.log(`  User: ${dbConfig.user}`);
+console.log(`  Database: ${dbConfig.database}`);
+console.log(`  Port: ${dbConfig.port}`);
+
+const db = mysql.createConnection(dbConfig);
 
 db.connect((err) => {
   if (err) {
     console.error("Database connection failed:", err);
+    console.error("Check your Railway MySQL service and environment variables");
     throw err;
   }
-  console.log("MySQL Connected...");
+  console.log("✅ MySQL Connected successfully!");
 });
 
 // Routes
