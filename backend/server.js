@@ -14,11 +14,15 @@ app.use(bodyParser.json());
 // Database connection
 // Railway provides MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE
 // Also support custom variable names for flexibility
+// Clean up malformed database name (fix Railway bug with " =railway")
+let databaseName = process.env.MYSQLDATABASE || process.env.DB_NAME || "guitartuner";
+databaseName = databaseName.trim().replace(/^=+/, ''); // Remove leading spaces and equals signs
+
 const dbConfig = {
   host: process.env.MYSQLHOST || process.env.DB_HOST || "localhost",
   user: process.env.MYSQLUSER || process.env.DB_USER || "root",
   password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
-  database: process.env.MYSQLDATABASE || process.env.DB_NAME || "guitartuner",
+  database: databaseName,
   port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
 };
 
