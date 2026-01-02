@@ -49,11 +49,13 @@ class _SongsPageState extends State<SongsPage> {
           final List<dynamic> chordsData = data['data'];
 
           // Convert to map for easy lookup
-          chordMap.clear();
-          for (var chordJson in chordsData) {
-            final chord = Chord.fromJson(chordJson);
-            chordMap[chord.name] = chord;
-          }
+          setState(() {
+            chordMap.clear();
+            for (var chordJson in chordsData) {
+              final chord = Chord.fromJson(chordJson);
+              chordMap[chord.name] = chord;
+            }
+          });
 
           print("Loaded ${chordMap.length} chords from database");
         } else {
