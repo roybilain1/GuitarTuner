@@ -86,7 +86,6 @@ class HomePage extends StatelessWidget {
                     elevation: 4,
                   ),
                   onPressed: () {
-                    // TODO: Navigate to songs page
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => SongsPage()),
