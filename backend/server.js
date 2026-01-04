@@ -11,9 +11,8 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
-// Database connection
+// Database connection pool (auto-reconnects)
 // Railway provides MYSQLHOST, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE
-// Also support custom variable names for flexibility
 // Clean up malformed database name (fix Railway bug with " =railway")
 let databaseName = process.env.MYSQLDATABASE || process.env.DB_NAME || "guitartuner";
 databaseName = databaseName.trim().replace(/^=+/, ''); // Remove leading spaces and equals signs
@@ -24,23 +23,31 @@ const dbConfig = {
   password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD || "",
   database: databaseName,
   port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
 };
 
-console.log("Attempting to connect to MySQL:");
+console.log("Creating MySQL connection pool:");
 console.log(`  Host: ${dbConfig.host}`);
 console.log(`  User: ${dbConfig.user}`);
 console.log(`  Database: ${dbConfig.database}`);
 console.log(`  Port: ${dbConfig.port}`);
 
-const db = mysql.createConnection(dbConfig);
+// Create connection pool instead of single connection
+const db = mysql.createPool(dbConfig);
 
-db.connect((err) => {
+// Test the pool connection
+db.getConnection((err, connection) => {
   if (err) {
-    console.error("Database connection failed:", err);
+    console.error("❌ Database connection pool failed:", err);
     console.error("Check your Railway MySQL service and environment variables");
-    throw err;
+  } else {
+    console.log("✅ MySQL Connection Pool created successfully!");
+    connection.release(); // Release the test connection back to the pool
   }
-  console.log("✅ MySQL Connected successfully!");
 });
 
 // Routes
